@@ -1,20 +1,45 @@
-import {
-  clearUser as clearUserSlice,
-  setUser as setUserSlice,
-} from "@/redux/slices/user-slice";
-import type { AppDispatch, RootState } from "@/redux/store";
+"use client";
+
 import type { UserState } from "@/types/state.type";
-import { useDispatch, useSelector } from "react-redux";
+import { deleteCookie, getCookie, setCookie } from "cookies-next";
+import { useEffect, useState } from "react";
+
+const COOKIE_KEY = "user";
 
 const useUser = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((state: RootState) => state.user);
+  const [user, setUserState] = useState<UserState | null>(null);
 
-  const setUser = (payload: UserState) => dispatch(setUserSlice(payload));
+  useEffect(() => {
+    const cookie = getCookie(COOKIE_KEY);
+    if (cookie) {
+      try {
+        const user = JSON.parse(cookie as string);
+        setUserState({ ...user, isAuthenticated: true });
+      } catch {
+        setUserState(null);
+      }
+    }
+  }, []);
 
-  const clearUser = () => dispatch(clearUserSlice());
+  const setUser = (user: UserState) => {
+    setCookie(COOKIE_KEY, JSON.stringify(user), {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+    setUserState(user);
+  };
 
-  return { isLoading: false, user, setUser, clearUser };
+  const clearUser = () => {
+    deleteCookie(COOKIE_KEY);
+    setUserState(null);
+  };
+
+  return {
+    isLoading: false,
+    user,
+    setUser,
+    clearUser,
+  };
 };
 
 export default useUser;

@@ -1,12 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
-import languageReducer from "./slices/language-slice";
-import userReducer from "./slices/user-slice";
 
 export const store = configureStore({
-  reducer: {
-    user: userReducer,
-    language: languageReducer,
-  },
+  reducer: {},
 });
 
 export type RootState = ReturnType<typeof store.getState>;

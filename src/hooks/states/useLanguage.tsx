@@ -1,22 +1,38 @@
+"use client";
+
 import { LANGUAGES } from "@/config";
-import { setLanguage as setLanguageSlice } from "@/redux/slices/language-slice";
-import type { AppDispatch, RootState } from "@/redux/store";
-import { useDispatch, useSelector } from "react-redux";
+import { getCookie, setCookie } from "cookies-next";
+import { useEffect, useState } from "react";
+
+const COOKIE_KEY = "language";
+const FALLBACK_LANG = "en";
 
 const useLanguage = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const code = useSelector((state: RootState) => state.language);
+  const [code, setCode] = useState<string>(FALLBACK_LANG);
 
-  const setLanguage = (payload: string) => dispatch(setLanguageSlice(payload));
-  const toggleLanguage = () => {
-    if (code === "en") {
-      setLanguage("bn");
-    } else if (code === "bn") {
-      setLanguage("en");
+  useEffect(() => {
+    const stored = getCookie(COOKIE_KEY);
+    if (typeof stored === "string" && LANGUAGES[stored]) {
+      setCode(stored);
+    }
+  }, []);
+
+  const setLanguage = (payload: string) => {
+    if (LANGUAGES[payload]) {
+      setCookie(COOKIE_KEY, payload, {
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        path: "/",
+      });
+      setCode(payload);
     }
   };
 
-  const language = LANGUAGES?.[code] || {};
+  const toggleLanguage = () => {
+    const next = code === "en" ? "bn" : "en";
+    setLanguage(next);
+  };
+
+  const language = LANGUAGES[code] || {};
   const languages = Object.values(LANGUAGES);
 
   return { languages, language, code, setLanguage, toggleLanguage };
